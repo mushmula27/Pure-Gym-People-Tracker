@@ -1,0 +1,6 @@
+To start working into the python environment:
+  cd into project folder
+  workon PureGym
+To add new requirement:
+  pip install <whatever>
+  pip freeze > requirements.txt
