@@ -22,17 +22,22 @@ axios
     var year = "YYYY";
     var dayOfWeek = "ddd";
     var hour = "HH";
-    var grouped = groupBy(dataMoment, "Timestamp", dayOfWeek);
+    //var hpd = "HH ddd";
+    var grouped = groupBy(dataMoment, "Timestamp", month);
     var keys = Object.keys(grouped);
+    var sorted = {};
+
+    for (let i = 0; i < keys.length; i++) {
+      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", dayOfWeek);
+    }
 
     var plot = {
       labels: [],
-      series: [[]]
+      series: []
     };
 
-    var i;
     var seriesData = [];
-    for (i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       filter = keys[i];
       total = totalPeeps(grouped, filter);
       ave = Math.round(total / grouped[filter].length);
