@@ -17,11 +17,32 @@ axios
       };
     });
     // Group dataMoment by date(default)/time/whatever
-    var grouped = groupBy(dataMoment, "Timestamp");
+    var day = "D MMM YYYY";
+    var month = "MMM YYYY";
+    var year = "YYYY";
+    var dayOfWeek = "ddd";
+    var hour = "HH";
+    var grouped = groupBy(dataMoment, "Timestamp", dayOfWeek);
+    var keys = Object.keys(grouped);
 
-    var filter = "1 Aug 2018";
-    var total = totalPeeps(grouped, filter);
-    var ave = Math.round(total / grouped[filter].length);
+    var plot = {
+      labels: [],
+      series: [[]]
+    };
+
+    var i;
+    var seriesData = [];
+    for (i = 0; i < keys.length; i++) {
+      filter = keys[i];
+      total = totalPeeps(grouped, filter);
+      ave = Math.round(total / grouped[filter].length);
+
+      plot["labels"].push(filter);
+      seriesData.push(ave);
+    }
+
+    plot["series"].push(seriesData);
+    new Chartist.Bar("#chart1", plot);
   });
 
 // Group data in any format. Default is "D MMM YYYY".
