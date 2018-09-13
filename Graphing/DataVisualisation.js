@@ -23,30 +23,50 @@ axios
     var dayOfWeek = "ddd";
     var hour = "HH";
     //var hpd = "HH ddd";
-    var grouped = groupBy(dataMoment, "Timestamp", month);
-    var keys = Object.keys(grouped);
-    var sorted = {};
 
-    for (let i = 0; i < keys.length; i++) {
-      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", dayOfWeek);
-    }
-
+    // Prep empty plot variable
     var plot = {
       labels: [],
       series: []
     };
-
     var seriesData = [];
-    for (let i = 0; i < keys.length; i++) {
-      filter = keys[i];
-      total = totalPeeps(grouped, filter);
-      ave = Math.round(total / grouped[filter].length);
 
-      plot["labels"].push(filter);
-      seriesData.push(ave);
+    // // Single bar plots
+    var grouped = groupBy(dataMoment, "Timestamp", dayOfWeek);
+    var keys = Object.keys(grouped);
+    //
+    // for (let i = 0; i < keys.length; i++) {
+    //   filter = keys[i];
+    //   total = totalPeeps(grouped, filter);
+    //   ave = average(total, grouped, filter);
+    //
+    //   plot["labels"].push(filter);
+    //   seriesData.push(ave);
+    // }
+    // plot["series"].push(seriesData);
+
+    // Stacked plots
+    var sorted = {};
+
+    for (let i = 0; i < keys.length; i++) {
+      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", hour);
+    }
+    var keysSorted = Object.keys(sorted);
+    plot["labels"].push(keysSorted);
+    var total = [];
+    var ave = [];
+
+    for (let i = 0; i < keysSorted.length; i++) {
+      subkey = Object.keys(sorted[keysSorted[i]]);
+      for (let p = 0; p < subkey.length; p++) {
+        total[p] = totalPeeps(sorted[keysSorted[i]], subkey[p]);
+        ave[p] = average(total[p], sorted[keysSorted[i]], subkey[p]);
+      }
+      plot["series"].push(ave);
     }
 
-    plot["series"].push(seriesData);
+    // Plotting the data
+
     new Chartist.Bar("#chart1", plot);
   });
 
@@ -69,4 +89,8 @@ function totalPeeps(objectArray, date) {
     (acc, currentVal) => acc + currentVal["Number of people"],
     0
   );
+}
+
+function average(total, data, filter) {
+  return Math.round(total / data[filter].length);
 }
