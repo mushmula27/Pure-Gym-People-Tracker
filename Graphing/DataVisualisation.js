@@ -52,12 +52,12 @@ axios
       sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", hour);
     }
     var keysSorted = Object.keys(sorted);
-    plot["labels"].push(keysSorted);
-    var total = [];
-    var ave = [];
+    plot["labels"] = keysSorted;
 
     for (let i = 0; i < keysSorted.length; i++) {
       subkey = Object.keys(sorted[keysSorted[i]]);
+      var total = [];
+      var ave = [];
       for (let p = 0; p < subkey.length; p++) {
         total[p] = totalPeeps(sorted[keysSorted[i]], subkey[p]);
         ave[p] = average(total[p], sorted[keysSorted[i]], subkey[p]);
