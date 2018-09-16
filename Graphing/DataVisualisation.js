@@ -5,6 +5,7 @@ axios
   .get("https://playground.hungryturtlecode.com/api/puregym/data")
   .then(res => {
     data = res.data;
+    console.log(data[data.length - 1]);
 
     // Apply moment.js to the timestamps in data.
     // Create new object with keys Number of people and Timestamp where
@@ -32,7 +33,7 @@ axios
     var seriesData = [];
 
     // // Single bar plots
-    var grouped = groupBy(dataMoment, "Timestamp", dayOfWeek);
+    var grouped = groupBy(dataMoment, "Timestamp", hour);
     var keys = Object.keys(grouped);
     //
     // for (let i = 0; i < keys.length; i++) {
@@ -49,11 +50,11 @@ axios
     var sorted = {};
 
     for (let i = 0; i < keys.length; i++) {
-      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", hour);
+      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", dayOfWeek);
     }
     var keysSorted = Object.keys(sorted);
-    plot["labels"] = keysSorted;
-
+    // plot["labels"] = keysSorted;
+    var subkey = [];
     for (let i = 0; i < keysSorted.length; i++) {
       subkey = Object.keys(sorted[keysSorted[i]]);
       var total = [];
@@ -64,10 +65,21 @@ axios
       }
       plot["series"].push(ave);
     }
+    plot["labels"] = subkey;
 
     // Plotting the data
 
-    new Chartist.Bar("#chart1", plot);
+    var chart = new Chartist.Bar("#chart1", plot);
+    chart.on("draw", function(context) {
+      if (context.type === "bar") {
+        context.element.attr({
+          style:
+            "stroke: hsl(" +
+            Math.floor((Chartist.getMultiValue(context.value) / 200) * 255) +
+            ", 50%, 50%);"
+        });
+      }
+    });
   });
 
 // Group data in any format. Default is "D MMM YYYY".
