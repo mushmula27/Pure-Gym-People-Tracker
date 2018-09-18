@@ -5,7 +5,6 @@ axios
   .get("https://playground.hungryturtlecode.com/api/puregym/data")
   .then(res => {
     data = res.data;
-    console.log(data[data.length - 1]);
 
     // Apply moment.js to the timestamps in data.
     // Create new object with keys Number of people and Timestamp where
@@ -17,6 +16,8 @@ axios
         Timestamp: moment(x.Timestamp)
       };
     });
+    // Getting current number of people in the gym
+    getCurNum(dataMoment);
     // Group dataMoment by date(default)/time/whatever
     var day = "D MMM YYYY";
     var month = "MMM YYYY";
@@ -81,6 +82,16 @@ axios
       }
     });
   });
+
+////// FUNCTIONS /////
+function getCurNum(data) {
+  var latestObj = data[data.length - 1];
+  var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
+  var num = latestObj["Number of people"];
+  var message =
+    "There are " + num + " people in the gym on " + timestamp + " .";
+  return (document.getElementById("currentVisitors").innerHTML = message);
+}
 
 // Group data in any format. Default is "D MMM YYYY".
 //Declare any other format as argument in groupBy function
