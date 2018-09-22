@@ -4,7 +4,7 @@ console.log("Yamum.");
 axios
   .get("https://playground.hungryturtlecode.com/api/puregym/data")
   .then(res => {
-    data = res.data;
+    var data = res.data;
 
     // Apply moment.js to the timestamps in data.
     // Create new object with keys Number of people and Timestamp where
@@ -88,9 +88,8 @@ function getCurNum(data) {
   var latestObj = data[data.length - 1];
   var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
   var num = latestObj["Number of people"];
-  var message =
-    "There are " + num + " people in the gym on " + timestamp + " .";
-  return (document.getElementById("currentVisitors").innerHTML = message);
+  var message = "There are " + num + " people in the gym on " + timestamp + ".";
+  document.getElementById("currentVisitors").innerHTML = message;
 }
 
 // Group data in any format. Default is "D MMM YYYY".
@@ -117,3 +116,9 @@ function totalPeeps(objectArray, date) {
 function average(total, data, filter) {
   return Math.round(total / data[filter].length);
 }
+
+var button = document.getElementById("get");
+
+button.addEventListener("click", () => {
+  console.log("button was licked.");
+});
