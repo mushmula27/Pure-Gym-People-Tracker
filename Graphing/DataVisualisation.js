@@ -21,10 +21,11 @@ axios
     var hour = "HH";
     //var hpd = "HH ddd";
 
-    var singlePlot = Datapoints.singlePlot(dataMoment, month);
+    var datapoint = new Datapoints(dataMoment);
+    singlePlot = datapoint.singlePlot(month);
 
     var plot = new Plots(singlePlot[0], singlePlot[1]);
-    Plots.plotChart(plot, "#chart1");
+    plot.plotChart("#chart1");
 
     ///////// Stacked plots - not working
 
@@ -89,8 +90,8 @@ class Datapoints {
 
   // Group data in any format. Default is "D MMM YYYY".
   //Declare any other format as argument in groupBy function
-  static groupBy(objectArray, property, dateFormat = "D MMM YYYY") {
-    return objectArray.reduce((acc, obj) => {
+  groupBy(property, dateFormat = "D MMM YYYY") {
+    return this.data.reduce((acc, obj) => {
       var key = obj[property];
       var keyF = key.format(dateFormat);
       if (!acc[keyF]) {
@@ -101,8 +102,8 @@ class Datapoints {
     }, {});
   }
 
-  static totalPeeps(objectArray, date) {
-    return objectArray[date].reduce(
+  static totalPeeps(object, date) {
+    return object[date].reduce(
       (acc, currentVal) => acc + currentVal["Number of people"],
       0
     );
@@ -112,8 +113,8 @@ class Datapoints {
     return Math.round(total / data[filter].length);
   }
 
-  static singlePlot(data, groupingParam) {
-    var grouped = Datapoints.groupBy(data, "Timestamp", groupingParam);
+  singlePlot(groupingParam) {
+    var grouped = Datapoints.groupBy("Timestamp", groupingParam);
     var labels = Object.keys(grouped);
     var series = [];
     for (let i = 0; i < labels.length; i++) {
@@ -132,8 +133,11 @@ class Plots {
     this.series = [series];
   }
 
-  static plotChart(plot, chartID) {
-    var chart = new Chartist.Bar(chartID, plot);
+  plotChart(chartID) {
+    var chart = new Chartist.Bar(chartID, {
+      labels: this.labels,
+      series: this.series
+    });
     chart.on("draw", function(context) {
       if (context.type === "bar") {
         context.element.attr({
