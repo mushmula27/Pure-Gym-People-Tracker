@@ -1,23 +1,18 @@
-console.log("Yamum.");
-
 // Scrape data from the API
 axios
   .get("https://playground.hungryturtlecode.com/api/puregym/data")
   .then(res => {
     data = res.data;
-
-    // Apply moment.js to the timestamps in data.
-    // Create new object with keys Number of people and Timestamp where
-    // Number of people is converted to int and
-    // Timestamp has moment.js applied to it.
     var dataMoment = data.map(x => {
       return {
+        // Ensure number of people are ints
         "Number of people": parseInt(x["Number of people"]),
+        // Appy moment.js to timestamps
         Timestamp: moment(x.Timestamp)
       };
     });
     // Getting current number of people in the gym
-    getCurNum(dataMoment);
+    Datapoints.getCurNum(dataMoment);
     // Group dataMoment by date(default)/time/whatever
     var day = "D MMM YYYY";
     var month = "MMM YYYY";
@@ -26,51 +21,119 @@ axios
     var hour = "HH";
     //var hpd = "HH ddd";
 
-    // Prep empty plot variable
-    var plot = {
-      labels: [],
-      series: []
-    };
-    var seriesData = [];
+    var singlePlot = Datapoints.singlePlot(dataMoment, month);
 
-    // // Single bar plots
-    var grouped = groupBy(dataMoment, "Timestamp", hour);
-    var keys = Object.keys(grouped);
+    var plot = new Plots(singlePlot[0], singlePlot[1]);
+    Plots.plotChart(plot, "#chart1");
+
+    ///////// Stacked plots - not working
+
+    // var plot2 = new Plots();
+
+    //   var plot2 = {
+    //     labels: [],
+    //     series: []
+    //   };
     //
-    // for (let i = 0; i < keys.length; i++) {
-    //   filter = keys[i];
-    //   total = totalPeeps(grouped, filter);
-    //   ave = average(total, grouped, filter);
+    //   var sorted = {};
     //
-    //   plot["labels"].push(filter);
-    //   seriesData.push(ave);
-    // }
-    // plot["series"].push(seriesData);
+    //   // First sort
+    //   for (let i = 0; i < keys.length; i++) {
+    //     sorted[keys[i]] = Datapoints.groupBy(grouped[keys[i]], "Timestamp", year);
+    //   }
+    //   console.log(sorted);
+    //   var keysSorted = Object.keys(sorted);
+    //   // plot2["labels"] = keysSorted;
+    //   var subkey = [];
+    //   for (let i = 0; i < keysSorted.length; i++) {
+    //     subkey = Object.keys(sorted[keysSorted[i]]);
+    //     var total = [];
+    //     var ave = [];
+    //     for (let p = 0; p < subkey.length; p++) {
+    //       total[p] = Datapoints.totalPeeps(sorted[keysSorted[i]], subkey[p]);
+    //       ave[p] = Datapoints.average(total[p], sorted[keysSorted[i]], subkey[p]);
+    //     }
+    //     plot2["series"].push(ave);
+    //   }
+    //   plot2["labels"].push(subkey);
+    //
+    //   console.log(plot2);
+    //
+    //   var chart = new Chartist.Bar("#chart2", plot2);
+    //   chart.on("draw", function(context) {
+    //     if (context.type === "bar") {
+    //       context.element.attr({
+    //         style:
+    //           "stroke: hsl(" +
+    //           Math.floor((Chartist.getMultiValue(context.value) / 200) * 255) +
+    //           ", 50%, 50%);"
+    //       });
+    //     }
+    //   });
+  });
 
-    // Stacked plots
-    var sorted = {};
+////// FUNCTIONS /////
+class Datapoints {
+  constructor(data) {
+    this.data = data;
+  }
 
-    for (let i = 0; i < keys.length; i++) {
-      sorted[keys[i]] = groupBy(grouped[keys[i]], "Timestamp", dayOfWeek);
-    }
-    var keysSorted = Object.keys(sorted);
-    // plot["labels"] = keysSorted;
-    var subkey = [];
-    for (let i = 0; i < keysSorted.length; i++) {
-      subkey = Object.keys(sorted[keysSorted[i]]);
-      var total = [];
-      var ave = [];
-      for (let p = 0; p < subkey.length; p++) {
-        total[p] = totalPeeps(sorted[keysSorted[i]], subkey[p]);
-        ave[p] = average(total[p], sorted[keysSorted[i]], subkey[p]);
+  static getCurNum(data) {
+    var latestObj = data[data.length - 1];
+    var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
+    var num = latestObj["Number of people"];
+    var message =
+      "There are " + num + " people in the gym on " + timestamp + " .";
+    return (document.getElementById("currentVisitors").innerHTML = message);
+  }
+
+  // Group data in any format. Default is "D MMM YYYY".
+  //Declare any other format as argument in groupBy function
+  static groupBy(objectArray, property, dateFormat = "D MMM YYYY") {
+    return objectArray.reduce((acc, obj) => {
+      var key = obj[property];
+      var keyF = key.format(dateFormat);
+      if (!acc[keyF]) {
+        acc[keyF] = [];
       }
-      plot["series"].push(ave);
+      acc[keyF].push(obj);
+      return acc;
+    }, {});
+  }
+
+  static totalPeeps(objectArray, date) {
+    return objectArray[date].reduce(
+      (acc, currentVal) => acc + currentVal["Number of people"],
+      0
+    );
+  }
+
+  static average(total, data, filter) {
+    return Math.round(total / data[filter].length);
+  }
+
+  static singlePlot(data, groupingParam) {
+    var grouped = Datapoints.groupBy(data, "Timestamp", groupingParam);
+    var labels = Object.keys(grouped);
+    var series = [];
+    for (let i = 0; i < labels.length; i++) {
+      var filter = labels[i];
+      var total = Datapoints.totalPeeps(grouped, filter);
+      var ave = Datapoints.average(total, grouped, filter);
+      series.push(ave);
     }
-    plot["labels"] = subkey;
+    return [labels, series];
+  }
+}
 
-    // Plotting the data
+class Plots {
+  constructor(labels, series) {
+    this.labels = labels;
+    this.series = [series];
+  }
 
-    var chart = new Chartist.Bar("#chart1", plot);
+  static plotChart(plot, chartID) {
+    var chart = new Chartist.Bar(chartID, plot);
     chart.on("draw", function(context) {
       if (context.type === "bar") {
         context.element.attr({
@@ -81,39 +144,5 @@ axios
         });
       }
     });
-  });
-
-////// FUNCTIONS /////
-function getCurNum(data) {
-  var latestObj = data[data.length - 1];
-  var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
-  var num = latestObj["Number of people"];
-  var message =
-    "There are " + num + " people in the gym on " + timestamp + " .";
-  return (document.getElementById("currentVisitors").innerHTML = message);
-}
-
-// Group data in any format. Default is "D MMM YYYY".
-//Declare any other format as argument in groupBy function
-function groupBy(objectArray, property, dateFormat = "D MMM YYYY") {
-  return objectArray.reduce((acc, obj) => {
-    var key = obj[property];
-    var keyF = key.format(dateFormat);
-    if (!acc[keyF]) {
-      acc[keyF] = [];
-    }
-    acc[keyF].push(obj);
-    return acc;
-  }, {});
-}
-
-function totalPeeps(objectArray, date) {
-  return objectArray[date].reduce(
-    (acc, currentVal) => acc + currentVal["Number of people"],
-    0
-  );
-}
-
-function average(total, data, filter) {
-  return Math.round(total / data[filter].length);
+  }
 }
