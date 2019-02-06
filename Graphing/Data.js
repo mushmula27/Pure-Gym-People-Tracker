@@ -22,7 +22,7 @@ axios
     //var hpd = "HH ddd";
 
     var datapoint = new Datapoints(dataMoment);
-    singlePlot = datapoint.singlePlot(month);
+    singlePlot = datapoint.singlePlot(hour);
 
     var plot = new Plots(singlePlot[0], singlePlot[1]);
     plot.plotChart("#chart1");
@@ -114,7 +114,7 @@ class Datapoints {
   }
 
   singlePlot(groupingParam) {
-    var grouped = Datapoints.groupBy("Timestamp", groupingParam);
+    var grouped = this.groupBy("Timestamp", groupingParam);
     var labels = Object.keys(grouped);
     var series = [];
     for (let i = 0; i < labels.length; i++) {
@@ -122,31 +122,8 @@ class Datapoints {
       var total = Datapoints.totalPeeps(grouped, filter);
       var ave = Datapoints.average(total, grouped, filter);
       series.push(ave);
+      // series.push(total);
     }
     return [labels, series];
-  }
-}
-
-class Plots {
-  constructor(labels, series) {
-    this.labels = labels;
-    this.series = [series];
-  }
-
-  plotChart(chartID) {
-    var chart = new Chartist.Bar(chartID, {
-      labels: this.labels,
-      series: this.series
-    });
-    chart.on("draw", function(context) {
-      if (context.type === "bar") {
-        context.element.attr({
-          style:
-            "stroke: hsl(" +
-            Math.floor((Chartist.getMultiValue(context.value) / 200) * 255) +
-            ", 50%, 50%);"
-        });
-      }
-    });
   }
 }
