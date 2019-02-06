@@ -127,3 +127,41 @@ class Datapoints {
     return [labels, series];
   }
 }
+
+class apiGetter {
+  constructor(url) {
+    this.url = url;
+  }
+  loadMaData() {
+    axios.get(this.url).then(res => {
+      return res.data;
+    });
+  }
+
+  parser(data) {
+    var dataMoment = data.map(x => {
+      return {
+        // Ensure number of people are ints
+        "Number of people": parseInt(x["Number of people"]),
+        // Appy moment.js to timestamps
+        Timestamp: moment(x.Timestamp)
+      };
+    });
+    return dataMoment;
+  }
+}
+
+var msg = new apiGetter(
+  "https://playground.hungryturtlecode.com/api/puregym/data"
+);
+data = msg.loadMaData();
+
+class App {
+  constructor() {
+    this.init = init();
+  }
+
+  init() {
+    this.data = apiGetter.loadMaData;
+  }
+}
