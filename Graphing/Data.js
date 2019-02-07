@@ -82,6 +82,10 @@ function timeFormat() {
   const dayOfWeek = "ddd";
   const hour = "HH";
   const hpd = "HH ddd";
+
+  var time = document.getElementById("grouping").value;
+  console.log(time);
+  return time;
 }
 
 class App {
@@ -94,7 +98,7 @@ class App {
     const data = getData.loadMaData().then(data => {
       var datapoint = new Datapoints(data);
       datapoint.getCurrentNum(); // Display current number of visitors
-      var singlePlot = datapoint.singlePlot("ddd");
+      var singlePlot = datapoint.singlePlot(timeFormat()); // Pass in the form selection value
       var plot = new Plots(singlePlot[0], singlePlot[1]);
       plot.plotChart("#chart1");
     });
