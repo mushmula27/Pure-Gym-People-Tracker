@@ -98,9 +98,13 @@ class App {
     const data = getData.loadMaData().then(data => {
       var datapoint = new Datapoints(data);
       datapoint.getCurrentNum(); // Display current number of visitors
-      var singlePlot = datapoint.singlePlot(timeFormat()); // Pass in the form selection value
-      var plot = new Plots(singlePlot[0], singlePlot[1]);
-      plot.plotChart("#chart1");
+      plotting();
+      document.getElementById("grouping").addEventListener("change", plotting);
+      function plotting() {
+        var singlePlot = datapoint.singlePlot(timeFormat()); // Pass in the form selection value
+        var plot = new Plots(singlePlot[0], singlePlot[1]);
+        plot.plotChart("#chart1");
+      }
     });
   }
 }

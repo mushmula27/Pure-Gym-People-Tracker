@@ -17,9 +17,12 @@
     <div>
       <form>
         Average number of people per:
-        <select id="grouping" onselect="timeFormat">
+        <select id="grouping" onchange="timeFormat">
           <option value="ddd">Day of the week</option>
           <option value="HH">Hour of day</option>
+          <option value="MMM YYYY">Month</option>
+          <option value="YYYY">Year</option>
+          <option value="HH ddd">HPD</option>
         </select>
       </form>
     </div>
