@@ -1,86 +1,10 @@
-// Scrape data from the API
-axios
-  .get("https://playground.hungryturtlecode.com/api/puregym/data")
-  .then(res => {
-    data = res.data;
-    var dataMoment = data.map(x => {
-      return {
-        // Ensure number of people are ints
-        "Number of people": parseInt(x["Number of people"]),
-        // Appy moment.js to timestamps
-        Timestamp: moment(x.Timestamp)
-      };
-    });
-    // Getting current number of people in the gym
-    Datapoints.getCurNum(dataMoment);
-    // Group dataMoment by date(default)/time/whatever
-    var day = "D MMM YYYY";
-    var month = "MMM YYYY";
-    var year = "YYYY";
-    var dayOfWeek = "ddd";
-    var hour = "HH";
-    //var hpd = "HH ddd";
-
-    var datapoint = new Datapoints(dataMoment);
-    singlePlot = datapoint.singlePlot(hour);
-
-    var plot = new Plots(singlePlot[0], singlePlot[1]);
-    plot.plotChart("#chart1");
-
-    ///////// Stacked plots - not working
-
-    // var plot2 = new Plots();
-
-    //   var plot2 = {
-    //     labels: [],
-    //     series: []
-    //   };
-    //
-    //   var sorted = {};
-    //
-    //   // First sort
-    //   for (let i = 0; i < keys.length; i++) {
-    //     sorted[keys[i]] = Datapoints.groupBy(grouped[keys[i]], "Timestamp", year);
-    //   }
-    //   console.log(sorted);
-    //   var keysSorted = Object.keys(sorted);
-    //   // plot2["labels"] = keysSorted;
-    //   var subkey = [];
-    //   for (let i = 0; i < keysSorted.length; i++) {
-    //     subkey = Object.keys(sorted[keysSorted[i]]);
-    //     var total = [];
-    //     var ave = [];
-    //     for (let p = 0; p < subkey.length; p++) {
-    //       total[p] = Datapoints.totalPeeps(sorted[keysSorted[i]], subkey[p]);
-    //       ave[p] = Datapoints.average(total[p], sorted[keysSorted[i]], subkey[p]);
-    //     }
-    //     plot2["series"].push(ave);
-    //   }
-    //   plot2["labels"].push(subkey);
-    //
-    //   console.log(plot2);
-    //
-    //   var chart = new Chartist.Bar("#chart2", plot2);
-    //   chart.on("draw", function(context) {
-    //     if (context.type === "bar") {
-    //       context.element.attr({
-    //         style:
-    //           "stroke: hsl(" +
-    //           Math.floor((Chartist.getMultiValue(context.value) / 200) * 255) +
-    //           ", 50%, 50%);"
-    //       });
-    //     }
-    //   });
-  });
-
-////// FUNCTIONS /////
 class Datapoints {
   constructor(data) {
     this.data = data;
   }
 
-  static getCurNum(data) {
-    var latestObj = data[data.length - 1];
+  getCurrentNum() {
+    var latestObj = this.data[this.data.length - 1];
     var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
     var num = latestObj["Number of people"];
     var message =
@@ -88,8 +12,6 @@ class Datapoints {
     return (document.getElementById("currentVisitors").innerHTML = message);
   }
 
-  // Group data in any format. Default is "D MMM YYYY".
-  //Declare any other format as argument in groupBy function
   groupBy(property, dateFormat = "D MMM YYYY") {
     return this.data.reduce((acc, obj) => {
       var key = obj[property];
@@ -102,14 +24,14 @@ class Datapoints {
     }, {});
   }
 
-  static totalPeeps(object, date) {
+  totalPeeps(object, date) {
     return object[date].reduce(
       (acc, currentVal) => acc + currentVal["Number of people"],
       0
     );
   }
 
-  static average(total, data, filter) {
+  average(total, data, filter) {
     return Math.round(total / data[filter].length);
   }
 
@@ -119,8 +41,8 @@ class Datapoints {
     var series = [];
     for (let i = 0; i < labels.length; i++) {
       var filter = labels[i];
-      var total = Datapoints.totalPeeps(grouped, filter);
-      var ave = Datapoints.average(total, grouped, filter);
+      var total = this.totalPeeps(grouped, filter);
+      var ave = this.average(total, grouped, filter);
       series.push(ave);
       // series.push(total);
     }
@@ -128,13 +50,15 @@ class Datapoints {
   }
 }
 
-class apiGetter {
+class getData {
   constructor(url) {
     this.url = url;
   }
   loadMaData() {
-    axios.get(this.url).then(res => {
-      return res.data;
+    return axios.get(this.url).then(res => {
+      const data = res.data;
+      const dataMoment = this.parser(data);
+      return dataMoment;
     });
   }
 
@@ -151,17 +75,30 @@ class apiGetter {
   }
 }
 
-var msg = new apiGetter(
-  "https://playground.hungryturtlecode.com/api/puregym/data"
-);
-data = msg.loadMaData();
+function timeFormat() {
+  const day = "D MMM YYYY";
+  const month = "MMM YYYY";
+  const year = "YYYY";
+  const dayOfWeek = "ddd";
+  const hour = "HH";
+  const hpd = "HH ddd";
+}
 
 class App {
-  constructor() {
-    this.init = init();
+  constructor(url) {
+    this.init(url);
   }
 
-  init() {
-    this.data = apiGetter.loadMaData;
+  init(url) {
+    getData = new getData(url);
+    const data = getData.loadMaData().then(data => {
+      var datapoint = new Datapoints(data);
+      datapoint.getCurrentNum(); // Display current number of visitors
+      var singlePlot = datapoint.singlePlot("ddd");
+      var plot = new Plots(singlePlot[0], singlePlot[1]);
+      plot.plotChart("#chart1");
+    });
   }
 }
+
+var app = new App("https://playground.hungryturtlecode.com/api/puregym/data");
