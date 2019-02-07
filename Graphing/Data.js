@@ -3,13 +3,11 @@ class Datapoints {
     this.data = data;
   }
 
-  getCurrentNum() {
-    var latestObj = this.data[this.data.length - 1];
+  static getCurrentNum(data) {
+    var latestObj = data[data.length - 1];
     var timestamp = latestObj["Timestamp"].format("MMMM Do YYYY, h:mm:ss a");
     var num = latestObj["Number of people"];
-    var message =
-      "There are " + num + " people in the gym on " + timestamp + " .";
-    return (document.getElementById("currentVisitors").innerHTML = message);
+    return [num, timestamp];
   }
 
   groupBy(property, dateFormat = "D MMM YYYY") {
@@ -75,19 +73,6 @@ class getData {
   }
 }
 
-function timeFormat() {
-  const day = "D MMM YYYY";
-  const month = "MMM YYYY";
-  const year = "YYYY";
-  const dayOfWeek = "ddd";
-  const hour = "HH";
-  const hpd = "HH ddd";
-
-  var time = document.getElementById("grouping").value;
-  console.log(time);
-  return time;
-}
-
 class App {
   constructor(url) {
     this.init(url);
@@ -95,18 +80,34 @@ class App {
 
   init(url) {
     getData = new getData(url);
-    const data = getData.loadMaData().then(data => {
-      var datapoint = new Datapoints(data);
-      datapoint.getCurrentNum(); // Display current number of visitors
-      plotting();
-      document.getElementById("grouping").addEventListener("change", plotting);
-      function plotting() {
-        var singlePlot = datapoint.singlePlot(timeFormat()); // Pass in the form selection value
-        var plot = new Plots(singlePlot[0], singlePlot[1]);
-        plot.plotChart("#chart1");
-      }
+    getData.loadMaData().then(data => {
+      this.datapoint = new Datapoints(data);
+      const currentNum = Datapoints.getCurrentNum(data); // Display current number of visitors
+      dispCurrentNum(currentNum);
+      this.plotting();
+      document
+        .getElementById("grouping")
+        .addEventListener("change", () => this.plotting());
+      //Ensuring the correct context is passed in.
+      //You can write it also with this.plotting.bind(this)
     });
+  }
+  plotting() {
+    var singlePlot = this.datapoint.singlePlot(timeFormat()); // Pass in the form selection value
+    var plot = new Plots(singlePlot[0], singlePlot[1]);
+    plot.plotChart("#chart1");
   }
 }
 
 var app = new App("https://playground.hungryturtlecode.com/api/puregym/data");
+
+// Update the current number of people every 10 mins
+setInterval(
+  () =>
+    getData.loadMaData().then(data => {
+      const currentNum = Datapoints.getCurrentNum(data);
+      dispCurrentNum(currentNum);
+      console.log("update");
+    }),
+  600000
+);
